@@ -16,7 +16,7 @@ var c2tts = {
 
     translateAndPlay: function(ttsMessageText) {
         c2tts.ready = false;
-        console.log('translateAndPlay:' + ttsMessageText);
+        // console.log('translateAndPlay:' + ttsMessageText);
         window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
 
         // TODO: play when button ready
@@ -36,17 +36,17 @@ var c2tts = {
     },
 
     playSourceLanguage: function(ttsMessageText) {
-        console.log('playSourceLanguage: ' + ttsMessageText);
+        // console.log('playSourceLanguage: ' + ttsMessageText);
         c2tts.simulateButtonClick('src-tts');
     },
 
     playTargetLanguage: function(ttsMessageText) {
-        console.log('playTargetLanguage' + ttsMessageText);
+        // console.log('playTargetLanguage' + ttsMessageText);
         c2tts.simulateButtonClick('res-tts');
     },
 
     setReadyWhenFinished: function() {
-        console.log('setReadyWhenFinished');
+        // console.log('setReadyWhenFinished');
         var finishedInterval = setInterval(function() {
             if (!c2tts.isAudioPlaying()) {
                 clearInterval(finishedInterval);
