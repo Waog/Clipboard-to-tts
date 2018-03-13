@@ -8,11 +8,11 @@ var c2tts = {
         window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
 
         setTimeout(function() {
-            playTargetLanguage(ttsMessageText);
+            c2tts.playTargetLanguage(ttsMessageText);
         }, 400);
 
         setTimeout(function() {
-            playSourceLanguage(ttsMessageText);
+            c2tts.playSourceLanguage(ttsMessageText);
         }, 2500);
     },
 
@@ -41,10 +41,10 @@ var c2tts = {
     }
 }
 
-cbParser = {
+var cbParser = {
     getCheckAndTransformedCollectedMessage: function(clipboard) {
-        if (isCollectedMessage(clipboard)) {
-            return transformCollectedMessage(clipboard);
+        if (cbParser.isCollectedMessage(clipboard)) {
+            return cbParser.transformCollectedMessage(clipboard);
         } else {
             return clipboard;
         }
@@ -66,11 +66,11 @@ setInterval(function() {
     var curCb = window.clipboardData.getData('Text');
     remainingPauseTime = Math.max(remainingPauseTime - 200, 0);
 
-    if (remainingPauseTime == 0 && clipboard != curCb && isCollectedMessage(curCb)) {
+    if (remainingPauseTime == 0 && clipboard != curCb && cbParser.isCollectedMessage(curCb)) {
         remainingPauseTime = 5000;
         clipboard = window.clipboardData.getData('Text');
         console.log('new clipboard text: ' + clipboard);
-        var ttsMessage = getCheckAndTransformedCollectedMessage(clipboard);
+        var ttsMessage = cbParser.getCheckAndTransformedCollectedMessage(clipboard);
         console.log('new ttsMessage: ' + ttsMessage);
 
         c2tts.translateAndPlay(ttsMessage);
