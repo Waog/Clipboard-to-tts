@@ -1,5 +1,5 @@
 // Example clipboard:
-// c2tts{第一 collected!} c2tts{第二 collected!} c2tts{第三 collected!}  c2tts{第二 collected!}
+// c2tts{石头 used!} c2tts{苹果 collected!}
 
 var c2tts = {
 
@@ -19,6 +19,7 @@ var c2tts = {
         console.log('translateAndPlay:' + ttsMessageText);
         window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
 
+        // TODO: play when button ready
         setTimeout(function() {
             c2tts.playTargetLanguage(ttsMessageText);
             c2tts.firstAudioFinished = true;
@@ -73,13 +74,26 @@ var cbParser = {
         REMINDER = 'clipboard-to-tts activated! ';
 
         $re = /c2tts\{([^\}]*)\}/g;
-        oldCbText = window.clipboardData.getData('Text');
+
+        try {
+            oldCbText = window.clipboardData.getData('Text');
+        } catch (err) {
+            console.warn('couldnt read clipboard');
+            return;
+        }
+
+
         result = $re.exec(oldCbText);
 
         if (result) {
             // remove message from cb
             newCbText = REMINDER + oldCbText.replace(result[0], '').trim();
-            window.clipboardData.setData('Text', newCbText);
+            try {
+                window.clipboardData.setData('Text', newCbText);
+            } catch (err) {
+                console.warn('couldnt write to clipboard');
+            }
+
 
             // transform message
             var clipboardMessage = result[1];
