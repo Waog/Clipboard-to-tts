@@ -4,6 +4,13 @@
 // 苹果 collected!
 
 var c2tts = {
+    isAudioPlaying: function() {
+        var srcBtn = document.getElementsByClassName("src-tts")[0];
+        var resBtn = document.getElementsByClassName("res-tts")[0];
+        return srcBtn.classList.contains('jfk-button-checked') ||
+            resBtn.classList.contains('jfk-button-checked');
+    },
+
     translateAndPlay: function(ttsMessageText) {
         window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
 
