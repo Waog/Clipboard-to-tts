@@ -3,56 +3,60 @@
 // or
 // 苹果 collected!
 
-function getCheckAndTransformedCollectedMessage(clipboard) {
-    if (isCollectedMessage(clipboard)) {
-        return transformCollectedMessage(clipboard);
-    } else {
-        return clipboard;
+var c2tts = {
+    translateAndPlay: function(ttsMessageText) {
+        window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
+
+        setTimeout(function() {
+            playTargetLanguage(ttsMessageText);
+        }, 400);
+
+        setTimeout(function() {
+            playSourceLanguage(ttsMessageText);
+        }, 2500);
+    },
+
+    playSourceLanguage: function(ttsMessageText) {
+        setTimeout(function() {
+            var mouseDown = document.createEvent("MouseEvents");
+            mouseDown.initEvent("mousedown", true, true);
+            document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseDown);
+
+            var mouseUp = document.createEvent("MouseEvents");
+            mouseUp.initEvent("mouseup", true, true);
+            document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseUp);
+        }, 200);
+    },
+
+    playTargetLanguage: function(ttsMessageText) {
+        setTimeout(function() {
+            var mouseDown = document.createEvent("MouseEvents");
+            mouseDown.initEvent("mousedown", true, true);
+            document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseDown);
+
+            var mouseUp = document.createEvent("MouseEvents");
+            mouseUp.initEvent("mouseup", true, true);
+            document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseUp);
+        }, 200);
     }
 }
 
-function isCollectedMessage(text) {
-    return text.indexOf(' collected!') !== -1
-}
+cbParser = {
+    getCheckAndTransformedCollectedMessage: function(clipboard) {
+        if (isCollectedMessage(clipboard)) {
+            return transformCollectedMessage(clipboard);
+        } else {
+            return clipboard;
+        }
+    },
 
-function transformCollectedMessage(collectedClipboard) {
-    return collectedClipboard.replace(' collected!', '') + '收集！';
-}
+    isCollectedMessage: function(text) {
+        return text.indexOf(' collected!') !== -1
+    },
 
-function translateAndPlay(ttsMessageText) {
-    window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
-
-    setTimeout(function() {
-        playTargetLanguage(ttsMessageText);
-    }, 400);
-
-    setTimeout(function() {
-        playSourceLanguage(ttsMessageText);
-    }, 2500);
-}
-
-function playSourceLanguage(ttsMessageText) {
-    setTimeout(function() {
-        var mouseDown = document.createEvent("MouseEvents");
-        mouseDown.initEvent("mousedown", true, true);
-        document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseDown);
-
-        var mouseUp = document.createEvent("MouseEvents");
-        mouseUp.initEvent("mouseup", true, true);
-        document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseUp);
-    }, 200);
-}
-
-function playTargetLanguage(ttsMessageText) {
-    setTimeout(function() {
-        var mouseDown = document.createEvent("MouseEvents");
-        mouseDown.initEvent("mousedown", true, true);
-        document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseDown);
-
-        var mouseUp = document.createEvent("MouseEvents");
-        mouseUp.initEvent("mouseup", true, true);
-        document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseUp);
-    }, 200);
+    transformCollectedMessage: function(collectedClipboard) {
+        return collectedClipboard.replace(' collected!', '') + '收集！';
+    }
 }
 
 var remainingPauseTime = 0;
@@ -69,6 +73,6 @@ setInterval(function() {
         var ttsMessage = getCheckAndTransformedCollectedMessage(clipboard);
         console.log('new ttsMessage: ' + ttsMessage);
 
-        translateAndPlay(ttsMessage);
+        c2tts.translateAndPlay(ttsMessage);
     }
 }, 50);
