@@ -1,10 +1,13 @@
 // Example clipboard:
-// 石头 collected!
-// or
-// 苹果 collected!
+// c2tts{第一 collected!} c2tts{第二 collected!} c2tts{第三 collected!}  c2tts{第二 collected!}
 
 var c2tts = {
+
+    ready: true,
+    firstAudioFinished: false,
+
     isAudioPlaying: function() {
+        // console.log('isAudioPlaying');
         var srcBtn = document.getElementsByClassName("src-tts")[0];
         var resBtn = document.getElementsByClassName("res-tts")[0];
         return srcBtn.classList.contains('jfk-button-checked') ||
@@ -12,39 +15,53 @@ var c2tts = {
     },
 
     translateAndPlay: function(ttsMessageText) {
+        c2tts.ready = false;
+        console.log('translateAndPlay:' + ttsMessageText);
         window.location = "https://translate.google.com/m/translate#zh-CN/en/" + encodeURIComponent(ttsMessageText);
 
         setTimeout(function() {
             c2tts.playTargetLanguage(ttsMessageText);
+            c2tts.firstAudioFinished = true;
         }, 400);
 
-        setTimeout(function() {
-            c2tts.playSourceLanguage(ttsMessageText);
-        }, 2500);
+        var secondSoundInterval = setInterval(function() {
+            if (!c2tts.isAudioPlaying() && c2tts.firstAudioFinished) {
+                clearInterval(secondSoundInterval);
+                c2tts.firstAudioFinished = false;
+                c2tts.playSourceLanguage(ttsMessageText);
+                c2tts.setReadyWhenFinished();
+            }
+        }, 50);
     },
 
     playSourceLanguage: function(ttsMessageText) {
-        setTimeout(function() {
-            var mouseDown = document.createEvent("MouseEvents");
-            mouseDown.initEvent("mousedown", true, true);
-            document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseDown);
-
-            var mouseUp = document.createEvent("MouseEvents");
-            mouseUp.initEvent("mouseup", true, true);
-            document.getElementsByClassName("src-tts")[0].dispatchEvent(mouseUp);
-        }, 200);
+        console.log('playSourceLanguage: ' + ttsMessageText);
+        c2tts.simulateButtonClick('src-tts');
     },
 
     playTargetLanguage: function(ttsMessageText) {
-        setTimeout(function() {
-            var mouseDown = document.createEvent("MouseEvents");
-            mouseDown.initEvent("mousedown", true, true);
-            document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseDown);
+        console.log('playTargetLanguage' + ttsMessageText);
+        c2tts.simulateButtonClick('res-tts');
+    },
 
-            var mouseUp = document.createEvent("MouseEvents");
-            mouseUp.initEvent("mouseup", true, true);
-            document.getElementsByClassName("res-tts")[0].dispatchEvent(mouseUp);
-        }, 200);
+    setReadyWhenFinished: function() {
+        console.log('setReadyWhenFinished');
+        var finishedInterval = setInterval(function() {
+            if (!c2tts.isAudioPlaying()) {
+                clearInterval(finishedInterval);
+                c2tts.ready = true;
+            }
+        }, 50);
+    },
+
+    simulateButtonClick: function(cssClass) {
+        var mouseDown = document.createEvent("MouseEvents");
+        mouseDown.initEvent("mousedown", true, true);
+        document.getElementsByClassName(cssClass)[0].dispatchEvent(mouseDown);
+
+        var mouseUp = document.createEvent("MouseEvents");
+        mouseUp.initEvent("mouseup", true, true);
+        document.getElementsByClassName(cssClass)[0].dispatchEvent(mouseUp);
     }
 }
 
@@ -56,23 +73,30 @@ var cbParser = {
         REMINDER = 'clipboard-to-tts activated! ';
 
         $re = /c2tts\{([^\}]*)\}/g;
-        // $str = 'c2tts{bla bla} c2tts{blu blu} c2tts{blo blo}';
         oldCbText = window.clipboardData.getData('Text');
-        result = $re.exec($str);
+        result = $re.exec(oldCbText);
 
-        console.log('old cb: \'' + oldCbText + '\'');
-        newCbText = REMINDER + $str.replace(result[0], '').trim();
-        console.log('new cb: \'' + newCbText + '\'');
-        window.clipboardData.setData('Text', newCbText);
-        console.log('new message: \'' + result[1] + '\'');
-        messages.push(result[1]);
+        if (result) {
+            // remove message from cb
+            newCbText = REMINDER + oldCbText.replace(result[0], '').trim();
+            window.clipboardData.setData('Text', newCbText);
+
+            // transform message
+            var clipboardMessage = result[1];
+            var transformedMessage = cbParser.getCheckAndTransformedCollectedMessage(clipboardMessage);
+
+            if (cbParser.messages.indexOf(transformedMessage) == -1) {
+                cbParser.messages.push(transformedMessage);
+                console.log('new messages: ' + cbParser.messages);
+            }
+        }
     },
 
-    getCheckAndTransformedCollectedMessage: function(clipboard) {
-        if (cbParser.isCollectedMessage(clipboard)) {
-            return cbParser.transformCollectedMessage(clipboard);
+    getCheckAndTransformedCollectedMessage: function(clipboardMessage) {
+        if (cbParser.isCollectedMessage(clipboardMessage)) {
+            return cbParser.transformCollectedMessage(clipboardMessage);
         } else {
-            return clipboard;
+            return clipboardMessage;
         }
     },
 
@@ -85,20 +109,27 @@ var cbParser = {
     }
 }
 
-var remainingPauseTime = 0;
-var clipboard = window.clipboardData.getData('Text');
+var c2ttsManager = {
+    start: function() {
+        c2ttsManager.startParseCb();
+        c2ttsManager.startPlayMessages();
+    },
 
-setInterval(function() {
-    var curCb = window.clipboardData.getData('Text');
-    remainingPauseTime = Math.max(remainingPauseTime - 200, 0);
+    startParseCb: function() {
+        setTimeout(function() {
+            cbParser.readAndRemoveFromCb();
+            c2ttsManager.startParseCb();
+        }, 50); // TODO: shorten interval
+    },
 
-    if (remainingPauseTime == 0 && clipboard != curCb && cbParser.isCollectedMessage(curCb)) {
-        remainingPauseTime = 5000;
-        clipboard = window.clipboardData.getData('Text');
-        console.log('new clipboard text: ' + clipboard);
-        var ttsMessage = cbParser.getCheckAndTransformedCollectedMessage(clipboard);
-        console.log('new ttsMessage: ' + ttsMessage);
-
-        c2tts.translateAndPlay(ttsMessage);
+    startPlayMessages: function() {
+        setInterval(function() {
+            if (cbParser.messages.length > 0 && c2tts.ready) {
+                message = cbParser.messages.shift();
+                c2tts.translateAndPlay(message);
+            }
+        }, 50); // TODO: shorten interval
     }
-}, 50);
+}
+
+c2ttsManager.start();
