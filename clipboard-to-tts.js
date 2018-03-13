@@ -98,12 +98,29 @@ var cbParser = {
             // transform message
             var clipboardMessage = result[1];
             var transformedMessage = cbParser.getCheckAndTransformedCollectedMessage(clipboardMessage);
+            transformedMessage = cbParser.getCheckAndTransformedUsedMessage(transformedMessage);
 
             if (cbParser.messages.indexOf(transformedMessage) == -1) {
                 cbParser.messages.push(transformedMessage);
                 console.log('new messages: ' + cbParser.messages);
             }
         }
+    },
+
+    getCheckAndTransformedUsedMessage: function(clipboardMessage) {
+        if (cbParser.isUsedMessage(clipboardMessage)) {
+            return cbParser.transformUsedMessage(clipboardMessage);
+        } else {
+            return clipboardMessage;
+        }
+    },
+
+    isUsedMessage: function(text) {
+        return text.indexOf(' used!') !== -1
+    },
+
+    transformUsedMessage: function(usedClipboard) {
+        return usedClipboard.replace(' used!', '') + '!';
     },
 
     getCheckAndTransformedCollectedMessage: function(clipboardMessage) {
@@ -126,6 +143,7 @@ var cbParser = {
 var c2ttsManager = {
     start: function() {
         c2ttsManager.startParseCb();
+        // TODO: summarize similar entries
         c2ttsManager.startPlayMessages();
     },
 
