@@ -49,6 +49,25 @@ var c2tts = {
 }
 
 var cbParser = {
+
+    messages: [],
+
+    readAndRemoveFromCb: function() {
+        REMINDER = 'clipboard-to-tts activated! ';
+
+        $re = /c2tts\{([^\}]*)\}/g;
+        // $str = 'c2tts{bla bla} c2tts{blu blu} c2tts{blo blo}';
+        oldCbText = window.clipboardData.getData('Text');
+        result = $re.exec($str);
+
+        console.log('old cb: \'' + oldCbText + '\'');
+        newCbText = REMINDER + $str.replace(result[0], '').trim();
+        console.log('new cb: \'' + newCbText + '\'');
+        window.clipboardData.setData('Text', newCbText);
+        console.log('new message: \'' + result[1] + '\'');
+        messages.push(result[1]);
+    },
+
     getCheckAndTransformedCollectedMessage: function(clipboard) {
         if (cbParser.isCollectedMessage(clipboard)) {
             return cbParser.transformCollectedMessage(clipboard);
